@@ -3,6 +3,8 @@ import { Sequelize } from "sequelize";
 
 dotenv.config();
 
+let sequelize: Sequelize | null = null;
+
 function buildSequelize(): Sequelize {
   const dbUrl = process.env.DB_URL;
   const dbType = (process.env.DB_TYPE || "supabase").toLowerCase();
@@ -49,10 +51,24 @@ function buildSequelize(): Sequelize {
   });
 }
 
-export const sequelize = buildSequelize();
+export function getSequelize(): Sequelize {
+  if (!sequelize) {
+    sequelize = buildSequelize();
+  }
+  return sequelize;
+}
 
 export async function initDb() {
-  await sequelize.authenticate();
-  await sequelize.sync({ alter: true });
-  console.log("Database synchronized");
+  try {
+    const db = getSequelize();
+    await db.authenticate();
+    await db.sync({ alter: true });
+    console.log("Database synchronized");
+  } catch (error: any) {
+    if (process.env.VERCEL === "1") {
+      console.warn("Database initialization skipped on Vercel:", error.message);
+      return;
+    }
+    throw error;
+  }
 }
