@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import { ensureDb } from "./db.js";
 import homeRoutes from "./routes/home.js";
 import authRoutes from "./routes/auth.js";
+import chatRoutes from "./routes/chat.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,6 +23,7 @@ app.use(express.json());
 // Routes
 app.use("/", homeRoutes);
 app.use("/", authRoutes);
+app.use("/ai", chatRoutes);
 
 // Static files (after routes)
 app.use(express.static(path.join(__dirname, "../public")));

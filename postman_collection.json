@@ -1,0 +1,583 @@
+{
+  "info": {
+    "name": "AI Chat Server API",
+    "description": "Complete API collection for AI Chat Server with authentication, chat, and embedding endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminApiKey",
+      "value": "admin-key-change-me",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Get Server Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            },
+            "description": "Check if the server is running"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.environment.set('userId', jsonData.userId);",
+                  "    pm.test('User registered successfully', function () {",
+                  "        pm.expect(jsonData.message).to.include('registered');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"securePassword123\",\n  \"name\": \"John Doe\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["register"]
+            },
+            "description": "Register a new user account. User will be created with approved=false and requires admin approval."
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.token) {",
+                  "        pm.collectionVariables.set('token', jsonData.token);",
+                  "        pm.test('Login successful and token saved', function () {",
+                  "            pm.expect(jsonData.approved).to.be.true;",
+                  "        });",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"securePassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["login"]
+            },
+            "description": "Login with email and password. Returns JWT token if user is approved."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["me"]
+            },
+            "description": "Get authenticated user's profile information"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{adminApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users"]
+            },
+            "description": "Get list of all users. Requires admin API key."
+          },
+          "response": []
+        },
+        {
+          "name": "Approve User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{adminApiKey}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approved\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/:userId/approval",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users", ":userId", "approval"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "user-uuid-here",
+                  "description": "User ID from registration or user list"
+                }
+              ]
+            },
+            "description": "Approve a user account. Set approved to true to approve, false to reject. Requires admin API key."
+          },
+          "response": []
+        },
+        {
+          "name": "Reject User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{adminApiKey}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approved\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/:userId/approval",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users", ":userId", "approval"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "user-uuid-here",
+                  "description": "User ID to reject"
+                }
+              ]
+            },
+            "description": "Reject/unapprove a user account. Requires admin API key."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "AI Chat",
+      "item": [
+        {
+          "name": "Chat (Static Response)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"What is artificial intelligence?\",\n  \"context\": [\n    \"AI is a branch of computer science...\",\n    \"Machine learning is a subset of AI...\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "chat"]
+            },
+            "description": "Chat with AI and receive complete response at once. The context array is optional and used for RAG (Retrieval Augmented Generation)."
+          },
+          "response": []
+        },
+        {
+          "name": "Chat (Streaming SSE)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Tell me a short story about a robot\",\n  \"context\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/chat/stream",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "chat", "stream"]
+            },
+            "description": "Chat with AI using Server-Sent Events for real-time streaming responses. Note: Postman may not display streaming correctly, use a browser or curl for best experience."
+          },
+          "response": []
+        },
+        {
+          "name": "Get AI Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "settings"]
+            },
+            "description": "Get current user's AI configuration including LLM model, preferences, and personal info"
+          },
+          "response": []
+        },
+        {
+          "name": "Update AI Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"llm_model\": \"gemini\",\n  \"llm_config\": {\n    \"model\": \"gemini-pro\",\n    \"temperature\": 0.7,\n    \"maxTokens\": 2048\n  },\n  \"embedding_provider\": \"gemini\",\n  \"embedding_config\": {},\n  \"preferences\": {\n    \"tone\": \"professional\",\n    \"language\": \"english\",\n    \"expertise_level\": \"intermediate\"\n  },\n  \"personal_info\": {\n    \"name\": \"John Doe\",\n    \"occupation\": \"Software Developer\",\n    \"interests\": [\"AI\", \"Web Development\", \"DevOps\"]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "settings"]
+            },
+            "description": "Update user's AI configuration. All fields are optional. You can update LLM model, embedding provider, preferences, and personal information."
+          },
+          "response": []
+        },
+        {
+          "name": "Clear Conversation History",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "history"]
+            },
+            "description": "Clear user's conversation history"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Embeddings",
+      "item": [
+        {
+          "name": "Generate Single Embedding",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"The quick brown fox jumps over the lazy dog\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/embed",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "embed"]
+            },
+            "description": "Generate embedding vector for a single text. Used for RAG and semantic search."
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Batch Embeddings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texts\": [\n    \"First document to embed\",\n    \"Second document to embed\",\n    \"Third document to embed\",\n    \"Fourth document to embed\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/embed",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "embed"]
+            },
+            "description": "Generate embedding vectors for multiple texts at once. More efficient than calling single embed multiple times."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Example Workflows",
+      "item": [
+        {
+          "name": "Switch to GPT-4",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"llm_model\": \"gpt\",\n  \"llm_config\": {\n    \"model\": \"gpt-4\",\n    \"temperature\": 0.8,\n    \"maxTokens\": 4096\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "settings"]
+            },
+            "description": "Example: Switch LLM provider to OpenAI GPT-4"
+          },
+          "response": []
+        },
+        {
+          "name": "Switch to Ollama",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"llm_model\": \"ollama\",\n  \"llm_config\": {\n    \"model\": \"llama2\",\n    \"temperature\": 0.7,\n    \"maxTokens\": 2048,\n    \"baseURL\": \"http://localhost:11434/v1\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "settings"]
+            },
+            "description": "Example: Switch LLM provider to local Ollama"
+          },
+          "response": []
+        },
+        {
+          "name": "Switch to FastAPI Embeddings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"embedding_provider\": \"fastapi\",\n  \"embedding_config\": {\n    \"fastapiUrl\": \"http://localhost:8000\",\n    \"model\": \"default\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "settings"]
+            },
+            "description": "Example: Switch embedding provider to custom FastAPI server"
+          },
+          "response": []
+        },
+        {
+          "name": "Chat with RAG Context",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"What is quantum computing?\",\n  \"context\": [\n    \"Quantum computing is a type of computation that harnesses the collective properties of quantum states, such as superposition, interference, and entanglement, to perform calculations.\",\n    \"Unlike classical computers that use bits (0 or 1), quantum computers use quantum bits or qubits, which can exist in multiple states simultaneously.\",\n    \"This allows quantum computers to process vast amounts of data much faster than classical computers for certain types of problems.\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "chat"]
+            },
+            "description": "Example: Chat with AI using RAG context. The context array contains relevant information retrieved from a vector database."
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"preferences\": {\n    \"tone\": \"casual\",\n    \"language\": \"english\",\n    \"response_length\": \"concise\",\n    \"use_emojis\": false\n  },\n  \"personal_info\": {\n    \"name\": \"Alex\",\n    \"age_group\": \"25-34\",\n    \"occupation\": \"Data Scientist\",\n    \"interests\": [\"machine learning\", \"data visualization\", \"python\"],\n    \"expertise_level\": \"advanced\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "settings"]
+            },
+            "description": "Example: Update user preferences and personal info for personalized AI responses"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

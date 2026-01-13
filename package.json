@@ -5,25 +5,35 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon --watch src --watch public --ext ts,html --exec \"node --loader ts-node/esm src/index.ts\"",
+    "dev:env": "nodemon --watch src --watch public --watch .env --ext ts,html --exec \"node --loader ts-node/esm src/index.ts\"",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "test:api": "node test-api.js"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.90.1",
+    "ai": "^6.0.30",
+    "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
     "jsonwebtoken": "^9.0.3",
+    "ollama-ai-provider": "^1.2.0",
+    "openai": "^6.16.0",
     "pg": "^8.16.3",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.37.7"
+    "sequelize": "^6.37.7",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.16.0",
+    "@types/uuid": "^11.0.0",
     "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"

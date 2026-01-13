@@ -1,13 +1,32 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { findUserByEmail, insertUser, getUserById } from "../db.js";
+import {
+  findUserByEmail,
+  insertUser,
+  getUserById,
+  updateUserApproval,
+  getAllUsers,
+} from "../db.js";
+import { authLimiter, apiLimiter } from "../middleware/rateLimiting.js";
 import type { RegisterRequest, LoginRequest } from "../types.js";
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
+const ADMIN_API_KEY = process.env.ADMIN_API_KEY || "admin-key-change-me";
 
-router.post("/register", async (req, res) => {
+// Middleware to verify admin API key
+const verifyAdminAccess = (req: any, res: any, next: any) => {
+  const apiKey = req.headers["x-api-key"] || req.headers["api-key"];
+  if (!apiKey || apiKey !== ADMIN_API_KEY) {
+    return res
+      .status(403)
+      .json({ error: "forbidden: invalid or missing API key" });
+  }
+  next();
+};
+
+router.post("/register", authLimiter, async (req, res) => {
   const { email, password, name } = req.body as RegisterRequest;
   if (!email || !password) {
     return res.status(400).json({ error: "email and password required" });
@@ -28,7 +47,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", authLimiter, async (req, res) => {
   const { email, password } = req.body as LoginRequest;
   if (!email || !password) {
     return res.status(400).json({ error: "email and password required" });
@@ -81,5 +100,52 @@ router.get("/me", async (req, res) => {
     return res.status(401).json({ error: "invalid token" });
   }
 });
+
+// Admin endpoints - with rate limiting
+router.get("/admin/users", apiLimiter, verifyAdminAccess, async (req, res) => {
+  try {
+    const users = await getAllUsers();
+    res.json({ users, total: users.length });
+  } catch (err: any) {
+    console.error("get users error", err);
+    res.status(500).json({ error: "failed to fetch users" });
+  }
+});
+
+router.patch(
+  "/admin/users/:userId/approval",
+  apiLimiter,
+  verifyAdminAccess,
+  async (req, res) => {
+    try {
+      const userId = Array.isArray(req.params.userId)
+        ? req.params.userId[0]
+        : req.params.userId;
+      const { approved } = req.body;
+
+      if (typeof approved !== "boolean") {
+        return res.status(400).json({ error: "approved must be a boolean" });
+      }
+
+      const user = await updateUserApproval(userId, approved);
+      if (!user) {
+        return res.status(404).json({ error: "user not found" });
+      }
+
+      res.json({
+        message: `user ${approved ? "approved" : "rejected"} successfully`,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          approved: user.approved,
+        },
+      });
+    } catch (err: any) {
+      console.error("update approval error", err);
+      res.status(500).json({ error: "failed to update approval status" });
+    }
+  }
+);
 
 export default router;

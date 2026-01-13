@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import type { UserRecord } from "./types";
 import { initDb } from "./sequelize.js";
 import { User } from "./models/user.js";
+import { UserDetail } from "./models/userDetail.js";
 
 dotenv.config();
 
@@ -50,4 +51,21 @@ export async function getUserById(id: string): Promise<UserRecord | null> {
   const user = await User.findByPk(id);
   if (!user) return null;
   return mapUser(user);
+}
+
+export async function updateUserApproval(
+  userId: string,
+  approved: boolean
+): Promise<UserRecord | null> {
+  const user = await User.findByPk(userId);
+  if (!user) return null;
+  await user.update({ approved });
+  return mapUser(user);
+}
+
+export async function getAllUsers(): Promise<UserRecord[]> {
+  const users = await User.findAll({
+    order: [["created_at", "DESC"]],
+  });
+  return users.map(mapUser);
 }
