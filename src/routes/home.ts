@@ -1,19 +1,9 @@
 import { Router } from "express";
+import { getApiStatus, getHealth } from "../controllers/homeController.js";
 
 const router = Router();
 
-router.get("/api/status", (_req, res) => {
-  res.json({
-    status: "ok",
-    service: "Auth API Server",
-    version: "1.0.0",
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-  });
-});
-
-router.get("/health", (_req, res) => {
-  res.json({ status: "ok" });
-});
+router.get("/api/status", getApiStatus);
+router.get("/health", getHealth);
 
 export default router;

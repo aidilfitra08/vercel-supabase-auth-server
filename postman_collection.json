@@ -27,7 +27,7 @@
       "name": "Health Check",
       "item": [
         {
-          "name": "Get Server Status",
+          "name": "Get Server Status (HTML)",
           "request": {
             "method": "GET",
             "header": [],
@@ -35,6 +35,20 @@
               "raw": "{{baseUrl}}/",
               "host": ["{{baseUrl}}"],
               "path": [""]
+            },
+            "description": "Check if the server is running"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Server Status Json",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
             },
             "description": "Check if the server is running"
           },
@@ -264,14 +278,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"message\": \"What is artificial intelligence?\",\n  \"context\": [\n    \"AI is a branch of computer science...\",\n    \"Machine learning is a subset of AI...\"\n  ]\n}"
+              "raw": "{\n  \"message\": \"What is artificial intelligence?\",\n  \"context\": [\n    \"AI is a branch of computer science...\",\n    \"Machine learning is a subset of AI...\"\n  ],\n  \"auto_retrieve\": true,\n  \"retrieve_limit\": 3\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/ai/chat",
               "host": ["{{baseUrl}}"],
               "path": ["ai", "chat"]
             },
-            "description": "Chat with AI and receive complete response at once. The context array is optional and used for RAG (Retrieval Augmented Generation)."
+            "description": "Chat with AI and receive complete response at once. The context array is optional and used for RAG (Retrieval Augmented Generation). With auto_retrieve enabled, relevant documents from Qdrant are automatically retrieved and added to context."
           },
           "response": []
         },
@@ -292,14 +306,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"message\": \"Tell me a short story about a robot\",\n  \"context\": []\n}"
+              "raw": "{\n  \"message\": \"Tell me a short story about a robot\",\n  \"context\": [],\n  \"auto_retrieve\": true,\n  \"retrieve_limit\": 3\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/ai/chat/stream",
               "host": ["{{baseUrl}}"],
               "path": ["ai", "chat", "stream"]
             },
-            "description": "Chat with AI using Server-Sent Events for real-time streaming responses. Note: Postman may not display streaming correctly, use a browser or curl for best experience."
+            "description": "Chat with AI using Server-Sent Events for real-time streaming responses. With auto_retrieve enabled, relevant documents are automatically retrieved from Qdrant. Note: Postman may not display streaming correctly, use a browser or curl for best experience."
           },
           "response": []
         },
@@ -429,6 +443,221 @@
               "path": ["ai", "embed"]
             },
             "description": "Generate embedding vectors for multiple texts at once. More efficient than calling single embed multiple times."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Documents (Qdrant)",
+      "item": [
+        {
+          "name": "Store Single Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"doc-001\",\n  \"text\": \"Quantum computing is a revolutionary technology that leverages quantum mechanics to solve complex problems exponentially faster than classical computers.\",\n  \"metadata\": {\n    \"doc_type\": \"knowledge_base\",\n    \"source\": \"tech_articles\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documents",
+              "host": ["{{baseUrl}}"],
+              "path": ["documents"]
+            },
+            "description": "Store a single document in Qdrant vector database. The text will be embedded automatically and stored with metadata. user_id and created_at are added automatically."
+          },
+          "response": []
+        },
+        {
+          "name": "Store Batch Documents",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documents\": [\n    {\n      \"id\": \"doc-002\",\n      \"text\": \"Machine learning is a subset of AI that enables systems to learn and improve from experience without being explicitly programmed.\",\n      \"metadata\": {\n        \"doc_type\": \"knowledge_base\",\n        \"source\": \"tech_articles\"\n      }\n    },\n    {\n      \"id\": \"doc-003\",\n      \"text\": \"Neural networks are computing systems inspired by biological neural networks that constitute animal brains.\",\n      \"metadata\": {\n        \"doc_type\": \"knowledge_base\",\n        \"source\": \"tech_articles\"\n      }\n    },\n    {\n      \"id\": \"doc-004\",\n      \"text\": \"Deep learning is a machine learning technique that teaches computers to learn by example, mimicking human cognition.\",\n      \"metadata\": {\n        \"doc_type\": \"knowledge_base\",\n        \"source\": \"tech_articles\"\n      }\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documents/batch",
+              "host": ["{{baseUrl}}"],
+              "path": ["documents", "batch"]
+            },
+            "description": "Store multiple documents at once (max 100). More efficient than storing one at a time. All documents will be embedded and stored in Qdrant."
+          },
+          "response": []
+        },
+        {
+          "name": "Search Documents",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"How does AI learn?\",\n  \"limit\": 5,\n  \"global\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documents/search",
+              "host": ["{{baseUrl}}"],
+              "path": ["documents", "search"]
+            },
+            "description": "Semantic search for documents. Returns documents most similar to the query. Set global=true to search all users' documents (default is user-specific)."
+          },
+          "response": []
+        },
+        {
+          "name": "List Documents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/documents?limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["documents"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Number of documents to retrieve (default: 10)"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Number of documents to skip (default: 0)"
+                }
+              ]
+            },
+            "description": "List all documents for the current user with pagination. Returns document IDs, text previews, and metadata."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Document by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/documents/:documentId",
+              "host": ["{{baseUrl}}"],
+              "path": ["documents", ":documentId"],
+              "variable": [
+                {
+                  "key": "documentId",
+                  "value": "doc-001",
+                  "description": "Document ID to retrieve"
+                }
+              ]
+            },
+            "description": "Get a specific document by its ID. Returns full document content and metadata."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Document by ID",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/documents/:documentId",
+              "host": ["{{baseUrl}}"],
+              "path": ["documents", ":documentId"],
+              "variable": [
+                {
+                  "key": "documentId",
+                  "value": "doc-001",
+                  "description": "Document ID to delete"
+                }
+              ]
+            },
+            "description": "Delete a specific document by its ID. Only the document owner can delete it."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete All User Documents",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/documents",
+              "host": ["{{baseUrl}}"],
+              "path": ["documents"]
+            },
+            "description": "Delete all documents belonging to the current user. Use with caution - this cannot be undone!"
+          },
+          "response": []
+        },
+        {
+          "name": "Qdrant Health Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/documents/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["documents", "health"]
+            },
+            "description": "Check Qdrant connection status and collection information. Useful for verifying configuration."
           },
           "response": []
         }
@@ -574,6 +803,90 @@
               "path": ["ai", "settings"]
             },
             "description": "Example: Update user preferences and personal info for personalized AI responses"
+          },
+          "response": []
+        },
+        {
+          "name": "Complete RAG Workflow",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"What is quantum computing and how does it differ from classical computing?\",\n  \"auto_retrieve\": true,\n  \"retrieve_limit\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "chat"]
+            },
+            "description": "Example: Complete RAG workflow. First upload documents using POST /documents/batch, then query with auto_retrieve=true. The AI will automatically retrieve relevant documents from Qdrant and use them as context."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Knowledge Base",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documents\": [\n    {\n      \"id\": \"kb-quantum-001\",\n      \"text\": \"Quantum computing uses qubits which can exist in superposition, representing both 0 and 1 simultaneously, unlike classical bits which are either 0 or 1.\",\n      \"metadata\": {\n        \"doc_type\": \"knowledge_base\",\n        \"source\": \"quantum_computing_guide\",\n        \"topic\": \"fundamentals\"\n      }\n    },\n    {\n      \"id\": \"kb-quantum-002\",\n      \"text\": \"Quantum entanglement allows qubits to be correlated with each other, so the state of one qubit depends on the state of another, enabling parallel processing.\",\n      \"metadata\": {\n        \"doc_type\": \"knowledge_base\",\n        \"source\": \"quantum_computing_guide\",\n        \"topic\": \"entanglement\"\n      }\n    },\n    {\n      \"id\": \"kb-quantum-003\",\n      \"text\": \"Quantum computers excel at optimization problems, cryptography, and simulating molecular interactions, but are not faster for all types of computation.\",\n      \"metadata\": {\n        \"doc_type\": \"knowledge_base\",\n        \"source\": \"quantum_computing_guide\",\n        \"topic\": \"applications\"\n      }\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documents/batch",
+              "host": ["{{baseUrl}}"],
+              "path": ["documents", "batch"]
+            },
+            "description": "Example: Upload a knowledge base with multiple related documents. These can then be automatically retrieved during chat."
+          },
+          "response": []
+        },
+        {
+          "name": "Chat Without Auto-Retrieval",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"What's the weather like today?\",\n  \"auto_retrieve\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "chat"]
+            },
+            "description": "Example: Chat without auto-retrieval. Set auto_retrieve=false to disable automatic document retrieval and chat normally."
           },
           "response": []
         }

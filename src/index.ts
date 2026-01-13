@@ -7,6 +7,7 @@ import { ensureDb } from "./db.js";
 import homeRoutes from "./routes/home.js";
 import authRoutes from "./routes/auth.js";
 import chatRoutes from "./routes/chat.js";
+import documentsRoutes from "./routes/documents.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,6 +25,7 @@ app.use(express.json());
 app.use("/", homeRoutes);
 app.use("/", authRoutes);
 app.use("/ai", chatRoutes);
+app.use("/documents", documentsRoutes);
 
 // Static files (after routes)
 app.use(express.static(path.join(__dirname, "../public")));
