@@ -170,9 +170,34 @@ export const chatStream = async (req: Request, res: Response) => {
     let fullResponse = "";
 
     try {
-      for await (const chunk of llmService.chatStream(messages)) {
-        fullResponse += chunk;
-        res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+      // Debug mode - stream random text instead of actual LLM response
+      if (process.env.STREAM_DEBUG_MODE === "true") {
+        const debugTexts = [
+          "This is a debug response. ",
+          "Streaming is working correctly. ",
+          "The SSE connection is established. ",
+          "Each chunk appears with a small delay. ",
+          "You can test the frontend streaming UI with this. ",
+          "Debug mode is enabled via STREAM_DEBUG_MODE env variable. ",
+          "This helps you verify the streaming functionality. ",
+          "No actual LLM API calls are made in debug mode. ",
+          "Perfect for development and testing! ",
+        ];
+
+        for (const text of debugTexts) {
+          fullResponse += text;
+          res.write(`data: ${JSON.stringify({ chunk: text })}\n\n`);
+          // Add a small delay to simulate streaming
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+
+        console.log(`[DEBUG] Streamed debug response for user ${user.id}`);
+      } else {
+        // Normal mode - use actual LLM
+        for await (const chunk of llmService.chatStream(messages)) {
+          fullResponse += chunk;
+          res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+        }
       }
 
       // Send completion event
@@ -307,7 +332,20 @@ export const chat = async (req: Request, res: Response) => {
     messages.push({ role: "user", content: message });
 
     // Get response
-    const response = await llmService.chat(messages);
+    let response: string;
+
+    // Debug mode - return mock response instead of actual LLM response
+    if (process.env.STREAM_DEBUG_MODE === "true") {
+      response =
+        "This is a debug response. The chat endpoint is working correctly. " +
+        "Debug mode is enabled via STREAM_DEBUG_MODE env variable. " +
+        "No actual LLM API calls are made in debug mode. " +
+        "Perfect for development and testing!";
+      console.log(`[DEBUG] Returned debug response for user ${user.id}`);
+    } else {
+      // Normal mode - use actual LLM
+      response = await llmService.chat(messages);
+    }
 
     // Update conversation history with trimming
     let updatedHistory = [
