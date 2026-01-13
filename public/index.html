@@ -14,80 +14,69 @@
         align-items: center;
         min-height: 100vh;
         margin: 0;
-        background: #1a1a1a;
-        color: #00ff00;
+        background: #f5f5dc;
+        color: #2c2c2c;
       }
 
-      .terminal {
-        background: #000;
-        padding: 2rem;
-        border-radius: 8px;
-        box-shadow: 0 0 50px rgba(0, 255, 0, 0.3);
+      .typewriter {
+        background: #fff;
+        padding: 3rem;
         max-width: 600px;
         width: 90%;
-        border: 2px solid #00ff00;
-      }
-
-      .terminal-header {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 1.5rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid #00ff00;
-      }
-
-      .terminal-button {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: #00ff00;
+        border: 1px solid #d0d0d0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       }
 
       h1 {
-        color: #00ff00;
-        margin: 0 0 1rem 0;
-        font-size: 1.5rem;
-        text-shadow: 0 0 10px #00ff00;
+        color: #2c2c2c;
+        margin: 0 0 2rem 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        border-bottom: 2px solid #2c2c2c;
+        padding-bottom: 0.5rem;
       }
 
       .prompt {
-        color: #00ff00;
-        margin-bottom: 0.5rem;
+        color: #555;
+        margin-bottom: 1.5rem;
+        font-style: italic;
       }
 
       .status-line {
-        margin: 0.5rem 0;
-        padding-left: 1rem;
-        line-height: 1.6;
+        margin: 0.75rem 0;
+        line-height: 1.8;
+        letter-spacing: 0.5px;
       }
 
       .key {
-        color: #00aaff;
+        color: #555;
+        font-weight: 700;
       }
 
       .value {
-        color: #00ff00;
+        color: #2c2c2c;
       }
 
       .loading {
-        color: #ffff00;
+        color: #888;
       }
 
       .error {
-        color: #ff0000;
+        color: #c00;
       }
 
       .status-ok {
-        color: #00ff00;
+        color: #2c2c2c;
         font-weight: bold;
-        text-shadow: 0 0 5px #00ff00;
       }
 
       .cursor {
         display: inline-block;
-        width: 8px;
+        width: 2px;
         height: 16px;
-        background: #00ff00;
+        background: #2c2c2c;
         animation: blink 1s infinite;
         margin-left: 4px;
       }
@@ -104,25 +93,19 @@
       }
 
       .timestamp {
-        margin-top: 1.5rem;
+        margin-top: 2rem;
         padding-top: 1rem;
-        border-top: 1px solid #00ff00;
+        border-top: 1px solid #d0d0d0;
         font-size: 0.85rem;
-        opacity: 0.7;
+        color: #777;
       }
     </style>
   </head>
   <body>
-    <div class="terminal">
-      <div class="terminal-header">
-        <div class="terminal-button"></div>
-        <div class="terminal-button"></div>
-        <div class="terminal-button"></div>
-      </div>
+    <div class="typewriter">
+      <h1>Server Health Monitor</h1>
 
-      <h1>&gt; Server Health Monitor</h1>
-
-      <div class="prompt">&gt; Fetching server status...</div>
+      <div class="prompt">Fetching server status...</div>
 
       <div id="status-content">
         <div class="status-line loading">
@@ -134,7 +117,7 @@
     <script>
       async function fetchServerHealth() {
         try {
-          const response = await fetch("/");
+          const response = await fetch("/api/status");
           const data = await response.json();
 
           const uptimeMinutes = Math.floor(data.uptime / 60);
@@ -171,6 +154,21 @@
 
       // Refresh every 5 seconds
       setInterval(fetchServerHealth, 5000);
+
+      // Hot reload - check for updates every 2 seconds
+      let lastModified = null;
+      setInterval(async () => {
+        try {
+          const response = await fetch("/index.html", { method: "HEAD" });
+          const modified = response.headers.get("Last-Modified");
+          if (lastModified && modified && lastModified !== modified) {
+            window.location.reload();
+          }
+          lastModified = modified;
+        } catch (error) {
+          // Silently fail
+        }
+      }, 2000);
     </script>
   </body>
 </html>

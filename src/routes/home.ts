@@ -2,7 +2,7 @@ import { Router } from "express";
 
 const router = Router();
 
-router.get("/", (_req, res) => {
+router.get("/api/status", (_req, res) => {
   res.json({
     status: "ok",
     service: "Auth API Server",

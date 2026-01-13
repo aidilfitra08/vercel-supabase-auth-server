@@ -18,11 +18,13 @@ const port = process.env.PORT || 3001;
 
 app.use(cors({ origin: true, credentials: false }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "../public")));
 
 // Routes
 app.use("/", homeRoutes);
 app.use("/", authRoutes);
+
+// Static files (after routes)
+app.use(express.static(path.join(__dirname, "../public")));
 
 app.listen(port, () => {
   console.log(`Auth server listening on :${port}`);
