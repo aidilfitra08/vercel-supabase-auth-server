@@ -5,7 +5,7 @@
 export interface ConversationMessage {
   role: "user" | "assistant" | "system";
   content: string;
-  timestamp?: number;
+  timestamp?: number | string; // Support both number (ms) and ISO string
 }
 
 /**
@@ -58,8 +58,15 @@ export function trimByAge(
   return history.filter((msg) => {
     // Keep messages without timestamps
     if (!msg.timestamp) return true;
+
+    // Convert timestamp to number if it's a string
+    const timestamp =
+      typeof msg.timestamp === "string"
+        ? new Date(msg.timestamp).getTime()
+        : msg.timestamp;
+
     // Keep messages newer than cutoff
-    return msg.timestamp > cutoffTime;
+    return timestamp > cutoffTime;
   });
 }
 
@@ -115,9 +122,13 @@ export function shouldCleanupHistory(history: ConversationMessage[]): boolean {
 export function formatHistory(history: ConversationMessage[]): string {
   return history
     .map((msg) => {
-      const timestamp = msg.timestamp
-        ? new Date(msg.timestamp).toLocaleTimeString()
-        : "unknown";
+      let timestamp = "unknown";
+      if (msg.timestamp) {
+        timestamp =
+          typeof msg.timestamp === "string"
+            ? new Date(msg.timestamp).toLocaleTimeString()
+            : new Date(msg.timestamp).toLocaleTimeString();
+      }
       return `[${timestamp}] ${msg.role.toUpperCase()}: ${msg.content.substring(
         0,
         100

@@ -366,6 +366,38 @@
           "response": []
         },
         {
+          "name": "Get Conversation History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai/history?limit=50&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "history"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50",
+                  "description": "Maximum number of messages to return (default: 50)"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Number of messages to skip (default: 0)"
+                }
+              ]
+            },
+            "description": "Retrieve paginated conversation history. Returns array of messages with metadata including total count and hasMore flag for pagination."
+          },
+          "response": []
+        },
+        {
           "name": "Clear Conversation History",
           "request": {
             "method": "DELETE",

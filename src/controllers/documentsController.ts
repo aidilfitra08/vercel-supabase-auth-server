@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { randomUUID } from "crypto";
 import { getQdrantService } from "../services/qdrant.js";
 
 export const storeDocument = async (req: Request, res: Response) => {
@@ -19,8 +20,8 @@ export const storeDocument = async (req: Request, res: Response) => {
       created_at: new Date().toISOString(),
     };
 
-    // Generate ID if not provided
-    const docId = id || `${user.id}_${Date.now()}`;
+    // Generate ID if not provided (must be UUID or integer for Qdrant)
+    const docId = id || randomUUID();
 
     await qdrant.storeDocument(docId, text, docMetadata);
 
@@ -53,7 +54,7 @@ export const storeBatchDocuments = async (req: Request, res: Response) => {
 
     // Prepare documents with user_id
     const preparedDocs = documents.map((doc, index) => ({
-      id: doc.id || `${user.id}_${Date.now()}_${index}`,
+      id: doc.id || randomUUID(),
       text: doc.text,
       metadata: {
         ...doc.metadata,

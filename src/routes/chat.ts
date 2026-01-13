@@ -8,6 +8,7 @@ import {
   getSettings,
   updateSettings,
   clearHistory,
+  getHistory,
 } from "../controllers/chatController.js";
 
 const router = Router();
@@ -24,6 +25,7 @@ router.get("/settings", authenticateUser, getSettings);
 router.put("/settings", authenticateUser, updateSettings);
 
 // History endpoints
+router.get("/history", authenticateUser, getHistory);
 router.delete("/history", authenticateUser, clearHistory);
 
 export default router;

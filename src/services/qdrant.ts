@@ -70,6 +70,9 @@ export class QdrantService {
       );
 
       if (!exists) {
+        console.log(
+          `[Qdrant] Creating collection: ${this.collectionName} with vector size: ${this.vectorSize}`
+        );
         // Create collection
         await this.client.createCollection(this.collectionName, {
           vectors: {
@@ -78,9 +81,14 @@ export class QdrantService {
           },
         });
         console.log(`[Qdrant] Created collection: ${this.collectionName}`);
+      } else {
+        console.log(`[Qdrant] Collection exists: ${this.collectionName}`);
       }
     } catch (error: any) {
-      console.error(`[Qdrant] Error ensuring collection:`, error.message);
+      console.error(
+        `[Qdrant] Error ensuring collection:`,
+        error.message || error
+      );
       throw error;
     }
   }
@@ -98,6 +106,9 @@ export class QdrantService {
 
       // Generate embedding
       const embedding = await this.embeddingService.embed(text);
+      console.log(
+        `[Qdrant] Store - Embedding size: ${embedding.length}, Expected: ${this.vectorSize}`
+      );
 
       // Store in Qdrant
       await this.client.upsert(this.collectionName, {
@@ -174,6 +185,9 @@ export class QdrantService {
 
       // Generate query embedding
       const queryEmbedding = await this.embeddingService.embed(query);
+      console.log(
+        `[Qdrant] Search - Query embedding size: ${queryEmbedding.length}, Collection: ${this.collectionName}`
+      );
 
       // Search in Qdrant
       const results = await this.client.search(this.collectionName, {
@@ -191,7 +205,11 @@ export class QdrantService {
         metadata: result.payload as DocumentMetadata,
       }));
     } catch (error: any) {
-      console.error(`[Qdrant] Error searching:`, error.message);
+      console.error(
+        `[Qdrant] Error searching:`,
+        error.message || error,
+        error.data || ""
+      );
       throw error;
     }
   }

@@ -35,3 +35,5 @@ fastapi-embedding-example/venv/
 fastapi-embedding-example/__pycache__/
 fastapi-embedding-example/*.pyc
 fastapi-embedding-example/.pytest_cache/
+
+qdrant_storage/

@@ -200,11 +200,7 @@ export const chatStream = async (req: Request, res: Response) => {
         }
       }
 
-      // Send completion event
-      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
-      res.end();
-
-      // Update conversation history with trimming
+      // Update conversation history with trimming BEFORE sending completion
       let updatedHistory = [
         ...recentHistory,
         {
@@ -222,10 +218,21 @@ export const chatStream = async (req: Request, res: Response) => {
       // Apply smart trimming before saving
       updatedHistory = smartTrimConversationHistory(updatedHistory);
 
-      await UserDetail.update(
-        { conversation_history: updatedHistory },
-        { where: { user_id: user.id } }
-      );
+      try {
+        await UserDetail.update(
+          { conversation_history: updatedHistory },
+          { where: { user_id: user.id } }
+        );
+      } catch (historyError: any) {
+        console.error(
+          `[HISTORY] Failed to save history for user ${user.id}:`,
+          historyError
+        );
+      }
+
+      // Send completion event after history is saved
+      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+      res.end();
     } catch (streamError: any) {
       console.error("Streaming error:", streamError);
       res.write(`data: ${JSON.stringify({ error: streamError.message })}\n\n`);
@@ -361,10 +368,18 @@ export const chat = async (req: Request, res: Response) => {
     // Apply smart trimming before saving
     updatedHistory = smartTrimConversationHistory(updatedHistory);
 
-    await UserDetail.update(
-      { conversation_history: updatedHistory },
-      { where: { user_id: user.id } }
-    );
+    try {
+      await UserDetail.update(
+        { conversation_history: updatedHistory },
+        { where: { user_id: user.id } }
+      );
+    } catch (historyError: any) {
+      console.error(
+        `[HISTORY] Failed to save history for user ${user.id}:`,
+        historyError
+      );
+      // Still return the response even if history update fails
+    }
 
     res.json({ response, message });
   } catch (error: any) {
@@ -519,5 +534,30 @@ export const clearHistory = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error("Clear history error:", error);
     res.status(500).json({ error: error.message || "failed to clear history" });
+  }
+};
+
+export const getHistory = async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const offset = parseInt(req.query.offset as string) || 0;
+
+    const userDetail = await getUserDetails(user.id);
+    const fullHistory = (userDetail.get("conversation_history") as any[]) || [];
+
+    // Apply pagination
+    const paginatedHistory = fullHistory.slice(offset, offset + limit);
+
+    res.json({
+      history: paginatedHistory,
+      total: fullHistory.length,
+      limit,
+      offset,
+      hasMore: offset + limit < fullHistory.length,
+    });
+  } catch (error: any) {
+    console.error("Get history error:", error);
+    res.status(500).json({ error: error.message || "failed to get history" });
   }
 };
