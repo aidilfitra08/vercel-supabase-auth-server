@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import pg from "pg";
 import { Sequelize } from "sequelize";
 
 dotenv.config();
@@ -13,6 +14,7 @@ function buildSequelize(): Sequelize {
     return new Sequelize(dbUrl, {
       dialect: "postgres",
       logging: false,
+      dialectModule: pg,
       dialectOptions: {
         ssl:
           process.env.DB_SSL === "false"
@@ -45,6 +47,7 @@ function buildSequelize(): Sequelize {
     port,
     dialect: "postgres",
     logging: false,
+    dialectModule: pg,
     dialectOptions: {
       ssl: isSupabase ? { require: true, rejectUnauthorized: false } : false,
     },
