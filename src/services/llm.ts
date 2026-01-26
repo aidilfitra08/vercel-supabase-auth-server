@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import OpenAI from "openai";
+import { v4 as uuidv4 } from "uuid";
 
 export type LLMProvider = "gemini" | "gpt" | "ollama";
 
@@ -117,7 +118,7 @@ export class LLMService {
   }
 
   private async *chatStreamGemini(
-    messages: ChatMessage[]
+    messages: ChatMessage[],
   ): AsyncGenerator<string> {
     if (!this.geminiClient) {
       throw new Error("Gemini client not initialized");
@@ -169,7 +170,7 @@ export class LLMService {
   }
 
   private async *chatStreamOpenAI(
-    messages: ChatMessage[]
+    messages: ChatMessage[],
   ): AsyncGenerator<string> {
     if (!this.openaiClient) {
       throw new Error("OpenAI client not initialized");
